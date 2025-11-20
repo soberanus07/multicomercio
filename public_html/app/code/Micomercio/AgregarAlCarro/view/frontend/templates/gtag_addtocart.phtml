@@ -1,0 +1,14 @@
+<script>
+require(['jquery'], function($) {
+    $(document).ajaxComplete(function(event, xhr, settings) {
+        if (settings.url.indexOf('/checkout/cart/add') !== -1 && xhr.responseJSON && xhr.responseJSON.success) {
+            console.log('Disparo conversión: agregar al carro');
+            gtag('event', 'conversion', {
+                'send_to': 'AW-16991196841/ccs6CJa72_gaEKmthKY_',
+                'value': 1.0,
+                'currency': 'CLP'
+            });
+        }
+    });
+});
+</script>

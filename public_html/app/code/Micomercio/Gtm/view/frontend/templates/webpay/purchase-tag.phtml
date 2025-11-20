@@ -1,0 +1,15 @@
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-7121781056"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-7121781056');
+
+  gtag('event', 'conversion', {
+    'send_to': 'AW-7121781056/5jcsCMCC98MaEKmthKY_',
+    'value': <?= (float) $block->getOrderAmount() ?>,
+    'currency': 'CLP',
+    'transaction_id': '<?= $block->escapeHtml($block->getOrderId()) ?>'
+  });
+</script>

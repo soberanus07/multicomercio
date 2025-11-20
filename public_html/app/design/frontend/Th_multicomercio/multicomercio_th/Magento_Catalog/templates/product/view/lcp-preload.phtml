@@ -1,0 +1,32 @@
+<?php
+/** @var $block \Magento\Framework\View\Element\Template */
+
+// 1) Obtenemos el producto actual desde el block 'product.info'
+$productBlock = $block->getLayout()->getBlock('product.info');
+$product = $productBlock ? $productBlock->getProduct() : null;
+
+$src = '';
+if ($product) {
+    // 2) Usamos el Image Helper para generar la URL del tamaño de PDP
+    /** @var \Magento\Catalog\Helper\Image $imageHelper */
+    $om = \Magento\Framework\App\ObjectManager::getInstance();
+    $imageHelper = $om->get(\Magento\Catalog\Helper\Image::class);
+
+    // Puedes probar también 'product_page_image_medium' según tu theme
+    $src = $imageHelper->init($product, 'product_page_image_large')->getUrl();
+
+    // 3) Fallback por si el helper no devuelve URL (raro, pero por si acaso)
+    if (!$src) {
+        /** @var \Magento\Store\Model\StoreManagerInterface $storeManager */
+        $storeManager = $om->get(\Magento\Store\Model\StoreManagerInterface::class);
+        $mediaBase = $storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA) . 'catalog/product';
+        $imageAttr = (string)$product->getData('image');
+        if ($imageAttr && $imageAttr !== 'no_selection') {
+            $src = rtrim($mediaBase, '/') . '/' . ltrim($imageAttr, '/');
+        }
+    }
+}
+
+if ($src): ?>
+<link rel="preload" as="image" href="<?= $block->escapeUrl($src) ?>">
+<?php endif; ?>

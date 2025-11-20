@@ -1,0 +1,6 @@
+{
+    "require": {
+        "magento/composer-root-update-plugin": "~1.0",
+        "magento/product-community-edition": "2.4.7"
+    }
+}

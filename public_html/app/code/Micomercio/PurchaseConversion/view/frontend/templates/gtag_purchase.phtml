@@ -1,0 +1,22 @@
+<?php
+/** @var \Magento\Sales\Model\Order $order */
+$order = $block->getOrder();
+
+if (!$order || !$order->getId()) {
+    return;
+}
+
+$conversionId = 'AW-16991196841/JrWXCKag5PgaEKmthKY_';
+$value = number_format((float)$order->getGrandTotal(), 2, '.', '');
+$currency = $order->getOrderCurrencyCode();
+$transactionId = $order->getIncrementId();
+?>
+<!-- Event snippet for Purchase - WebPay conversion page -->
+<script>
+    gtag('event', 'conversion', {
+        'send_to': '<?= $conversionId ?>',
+        'value': <?= $value ?>,
+        'currency': '<?= $currency ?>',
+        'transaction_id': '<?= $transactionId ?>'
+    });
+</script>

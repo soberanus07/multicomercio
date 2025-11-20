@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!-- Añade inline-style para reservar espacio en product-info-main -->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="product.info.main">
+          <block class="Magento\Catalog\Block\Product\View"
+                   name="product.microdata.ratings"
+                   template="Magento_Catalog::product/microdata/ratings.phtml"
+                   after="-"/>
+        </referenceContainer>
+
+
+
+    </body>
+</page>

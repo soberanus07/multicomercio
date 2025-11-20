@@ -1,0 +1,179 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+/**
+ * Product media data template
+ *
+ * @var $block \Magento\Catalog\Block\Product\View\Gallery
+ */
+?>
+
+<?php
+$images = $block->getGalleryImages()->getItems();
+$mainImage = current(array_filter($images, function ($img) use ($block) {
+    return $block->isMainImage($img);
+}));
+
+if (!empty($images) && empty($mainImage)) {
+    $mainImage = $block->getGalleryImages()->getFirstItem();
+}
+
+$helper = $block->getData('imageHelper');
+$mainImageData = $mainImage ?
+    $mainImage->getData('medium_image_url') :
+    $helper->getDefaultPlaceholderUrl('image');
+
+// Fallback WebP dinámico
+$mainImageWebp = preg_replace('/\.(jpe?g|png)(\?.*)?$/i', '.webp', $mainImageData);
+$mainImageWebpPath = parse_url($mainImageWebp, PHP_URL_PATH);
+$mainImageWebpFile = BP . '/pub' . $mainImageWebpPath;
+$mainImageFinal = file_exists($mainImageWebpFile) ? $mainImageWebp : $mainImageData;
+?>
+
+<?php
+// Imagen principal para Google (SEO)
+$imageUrl = $this->helper('Magento\Catalog\Helper\Image')
+    ->init($block->getProduct(), 'product_page_image_large')
+    ->setImageFile($block->getImageFile())
+    ->getUrl();
+
+$imageWebp = preg_replace('/\.(jpe?g|png)(\?.*)?$/i', '.webp', $imageUrl);
+$imageWebpPath = parse_url($imageWebp, PHP_URL_PATH);
+$imageWebpFile = BP . '/pub' . $imageWebpPath;
+$seoImage = file_exists($imageWebpFile) ? $imageWebp : $imageUrl;
+?>
+ <meta itemprop="image" content="<?= $seoImage ?>"> 
+
+
+
+
+<?php
+$lcpUrl = '';
+$galleryJsonRaw  = $block->getGalleryImagesJson();
+$galleryJsonWebp = preg_replace('/\.(jpe?g|png)(?=")/i', '.webp', $galleryJsonRaw);
+$galleryArr      = json_decode($galleryJsonWebp, true) ?: [];
+if (!empty($galleryArr)) {
+    $first  = reset($galleryArr);
+    $lcpUrl = $first['img'] ?? $first['full'] ?? $first['thumb'] ?? '';
+}
+?>
+<?php if ($lcpUrl): ?>
+<link rel="preload" as="image" href="<?= /* @noEscape */ $lcpUrl ?>" fetchpriority="high">
+<?php endif; ?>
+
+
+
+<style>
+ .fotorama__stage__shaft { transition-duration: 0ms !important; }
+
+/* Aísla el recálculo al interior del stage */
+ .fotorama__stage { contain: layout paint; }
+
+</style>
+
+
+
+
+
+
+<div class="fotorama-wrapper-fix">
+  <div class="gallery-placeholder _block-content-loading" data-gallery-role="gallery-placeholder">
+    <img
+    alt="main product photo"
+    class="gallery-placeholder__image"
+    src="<?= /* @noEscape */ $mainImageFinal ?>"
+    loading="eager" fetchpriority="high"
+    width="500" height="500"
+  />
+</div>
+
+</div>
+
+
+<script type="text/x-magento-init">
+{
+    "[data-gallery-role=gallery-placeholder]": {
+        "mage/gallery/gallery": {
+            "mixins": ["magnifier/magnify"],
+            "magnifierOpts": <?= /* @noEscape */ $block->getMagnifier() ?>,
+<?php
+    // Obtener y modificar las imágenes para usar .webp
+    $galleryJson = $block->getGalleryImagesJson();
+    $webpJson = preg_replace('/\.(jpe?g|png)(?=")/i', '.webp', $galleryJson);
+?>
+
+<?php
+$options = json_decode($block->getGalleryOptions()->getOptionsJson(), true) ?: [];
+$options['preload'] = 0; // clave para no predescargar
+?>
+            "data": <?= /* @noEscape */ $webpJson ?>,
+            "options": <?= /* @noEscape */ json_encode($options, JSON_UNESCAPED_SLASHES)?>,
+            "fullscreen": <?= /* @noEscape */ $block->getGalleryOptions()->getFSOptionsJson() ?>,
+            "breakpoints": <?= /* @noEscape */ $block->getBreakpoints() ?>,
+             "imgAttr": { "loading":"lazy", "decoding":"async", "fetchpriority":"low" }
+        }
+    }
+}
+</script>
+
+
+<script>
+require(['jquery'], function ($) {
+  var ACTIVE_FRAME_SEL = '.fotorama__stage__frame.fotorama__active, .fotorama__stage__frame[data-active="true"]';
+  var IMG_SEL          = 'img.fotorama__img, img.fotorama__img--full';
+
+  function stampActive() {
+    var $activeImg = $(ACTIVE_FRAME_SEL).find(IMG_SEL).first();
+
+    if ($activeImg.length) {
+      // Activo: candidato LCP
+    $activeImg.attr({'loading':'eager','fetchpriority':'high'}).removeAttr('decoding');
+      if (!$activeImg.attr('width')  && $activeImg[0].naturalWidth)  $activeImg.attr('width',  $activeImg[0].naturalWidth);
+      if (!$activeImg.attr('height') && $activeImg[0].naturalHeight) $activeImg.attr('height', $activeImg[0].naturalHeight);
+
+      // Resto: lazy/low
+      $(ACTIVE_FRAME_SEL).siblings().find(IMG_SEL).each(function () {
+        this.setAttribute('loading','lazy');
+        this.setAttribute('decoding','async');
+        this.setAttribute('fetchpriority','low');
+        if (!this.getAttribute('width')  && this.naturalWidth)  this.setAttribute('width',  this.naturalWidth);
+        if (!this.getAttribute('height') && this.naturalHeight) this.setAttribute('height', this.naturalHeight);
+      });
+      return true;
+    }
+    return false;
+  }
+
+  // 1) Delegado en documento: no importa si Fotorama ya estaba
+  $(document).on('fotorama:ready fotorama:load fotorama:show fotorama:showend fotorama:resize', '.fotorama', function () {
+    // microtask para dar tiempo a que inserte el <img>
+    setTimeout(stampActive, 0);
+  });
+
+  // 2) Loop de arranque: intenta varias veces hasta que aparezca el <img> activo
+  (function boostStartup(attempts, delay) {
+    var ok = stampActive();
+    if (!ok && attempts > 0) {
+      setTimeout(function(){ boostStartup(attempts - 1, delay); }, delay);
+    }
+  })(30, 100); // ~3s de ventana de arranque
+
+  // 3) MutationObserver: si Fotorama recrea frames/imagenes, volvemos a sellar
+  function attachObserver() {
+    var stage = document.querySelector('.fotorama__stage__shaft');
+    if (!stage) return false;
+    var mo = new MutationObserver(function(){ stampActive(); });
+    mo.observe(stage, {childList:true, subtree:true, attributes:true, attributeFilter:['class','data-active','src']});
+    return true;
+  }
+  var t = 0, iv = setInterval(function(){
+    if (attachObserver() || ++t > 20) clearInterval(iv);
+  }, 150);
+
+  // Seguridad extra
+  $(window).on('load pageshow visibilitychange', function(){ setTimeout(stampActive, 150); });
+});
+</script>

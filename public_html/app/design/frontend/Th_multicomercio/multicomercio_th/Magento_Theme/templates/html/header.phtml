@@ -1,0 +1,21 @@
+<?php
+/** @var \Magento\Theme\Block\Html\Header $block */
+?>
+
+<?php if ($block->getIsHomePage()): ?>
+    <h1 class="logo">
+        <a href="<?= $block->getUrl('') ?>" title="<?= $block->escapeHtml($block->getLogoAlt()) ?>" class="logo">
+            <img src="<?= $block->getLogoSrc() ?>"
+                 title="<?= $block->escapeHtml($block->getLogoAlt()) ?>"
+                 alt="<?= $block->getLogoAlt() ?>" />
+        </a>
+    </h1>
+<?php else: ?>
+    <strong class="logo">
+        <a href="<?= $block->getUrl('') ?>" title="<?= $block->escapeHtml($block->getLogoAlt()) ?>" class="logo">
+            <img src="<?= $block->getLogoSrc() ?>"
+                 title="<?= $block->escapeHtml($block->getLogoAlt()) ?>"
+                 alt="<?= $block->getLogoAlt() ?>" />
+        </a>
+    </strong>
+<?php endif; ?>

@@ -1,0 +1,380 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+/**
+ * Product media data template
+ *
+ * @var $block \Magento\Catalog\Block\Product\View\Gallery
+ */
+?>
+
+<?php
+$images = $block->getGalleryImages()->getItems();
+$mainImage = current(array_filter($images, function ($img) use ($block) {
+    return $block->isMainImage($img);
+}));
+
+if (!empty($images) && empty($mainImage)) {
+    $mainImage = $block->getGalleryImages()->getFirstItem();
+}
+
+$helper = $block->getData('imageHelper');
+$mainImageData = $mainImage ?
+    $mainImage->getData('medium_image_url') :
+    $helper->getDefaultPlaceholderUrl('image');
+
+// Fallback WebP dinámico
+$mainImageWebp = preg_replace('/\.(jpe?g|png)(\?.*)?$/i', '.webp', $mainImageData);
+$mainImageWebpPath = parse_url($mainImageWebp, PHP_URL_PATH);
+$mainImageWebpFile = BP . '/pub' . $mainImageWebpPath;
+$mainImageFinal = file_exists($mainImageWebpFile) ? $mainImageWebp : $mainImageData;
+?>
+
+<?php
+// Imagen principal para Google (SEO)
+$imageUrl = $this->helper('Magento\Catalog\Helper\Image')
+    ->init($block->getProduct(), 'product_page_image_large')
+    ->setImageFile($block->getImageFile())
+    ->getUrl();
+
+$imageWebp = preg_replace('/\.(jpe?g|png)(\?.*)?$/i', '.webp', $imageUrl);
+$imageWebpPath = parse_url($imageWebp, PHP_URL_PATH);
+$imageWebpFile = BP . '/pub' . $imageWebpPath;
+$seoImage = file_exists($imageWebpFile) ? $imageWebp : $imageUrl;
+?>
+<meta itemprop="image" content="<?= $seoImage ?>">
+
+<?php
+$lcpUrl = '';
+$galleryJsonRaw  = $block->getGalleryImagesJson();
+$galleryJsonWebp = preg_replace('/\.(jpe?g|png)(?=")/i', '.webp', $galleryJsonRaw);
+$galleryArr      = json_decode($galleryJsonWebp, true) ?: [];
+if (!empty($galleryArr)) {
+    $first  = reset($galleryArr);
+    $lcpUrl = $first['img'] ?? $first['full'] ?? $first['thumb'] ?? '';
+}
+?>
+<?php if ($lcpUrl): ?>
+<link rel="preload" as="image" href="<?= /* @noEscape */ $lcpUrl ?>" fetchpriority="high">
+<?php endif; ?>
+
+<style>
+.fotorama__stage__shaft { transition-duration: 0ms !important; }
+.fotorama__stage { contain: layout paint; }
+
+/* CRITICAL: Forzar dimensiones exactas para prevenir CLS */
+.gallery-placeholder {
+  min-height: 500px !important;
+  max-height: 500px !important;
+  width: 100% !important;
+  max-width: 500px !important;
+  margin: 0 auto;
+}
+
+.gallery-placeholder__image {
+  width: auto !important;
+  height: auto !important;
+  max-width: 500px !important;
+  max-height: 500px !important;
+  object-fit: contain !important;
+  display: block !important;
+  margin: 0 auto !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .gallery-placeholder {
+    min-height: 300px !important;
+    max-height: 300px !important;
+    max-width: 300px !important;
+  }
+  .gallery-placeholder__image {
+      width: auto !important;
+      height: auto !important;
+      max-width: 300px !important;
+      max-height: 300px !important;
+      display: block !important;
+      margin: 0 auto !important;
+    }
+}
+</style>
+
+
+
+<div class="fotorama-wrapper-fix" style="min-height: 500px; max-height: 500px;">
+  <div class="gallery-placeholder _block-content-loading"
+       data-gallery-role="gallery-placeholder"
+       style="min-height: 500px !important; max-height: 500px !important; max-width: 500px !important;">
+       <img
+     alt="main product photo"
+     class="gallery-placeholder__image"
+     src="<?= /* @noEscape */ $mainImageFinal ?>"
+     loading="eager"
+     fetchpriority="high"
+     width="500"
+     height="500"
+     style="width: auto !important; height: auto !important; max-width: 500px !important; max-height: 500px !important; object-fit: contain !important; display: block !important; margin: 0 auto !important;"
+   />
+  </div>
+</div>
+<!-- PASO 5: Script preventivo ANTES de Fotorama -->
+<script>
+(function() {
+  'use strict';
+
+  // CRÍTICO: Aplicar dimensiones INMEDIATAMENTE
+  function forceDimensions() {
+    // Forzar en placeholder
+    var placeholder = document.querySelector('[data-gallery-role="gallery-placeholder"]');
+    if (placeholder) {
+      placeholder.style.minHeight = '500px';
+      placeholder.style.maxHeight = '500px';
+      placeholder.style.maxWidth = '500px';
+    }
+
+    // Forzar en TODAS las imágenes de Fotorama (el problema principal)
+    document.querySelectorAll('.fotorama__img, img.fotorama__img, .fotorama__img--full').forEach(function(img, index) {
+  img.style.width = 'auto';
+  img.style.height = 'auto';
+  img.style.maxWidth = '100%';
+  img.style.maxHeight = '100%';
+  img.style.objectFit = 'contain';
+  img.setAttribute('width', '500');
+  img.setAttribute('height', '500');
+
+  // Solo la primera imagen es eager, el resto lazy
+  if (index === 0) {
+    img.setAttribute('loading', 'eager');
+    img.setAttribute('fetchpriority', 'high');
+  } else {
+    img.setAttribute('loading', 'lazy');
+    img.setAttribute('fetchpriority', 'low');
+  }
+});
+
+    // Forzar en stages y frames
+    document.querySelectorAll('.fotorama__stage, .fotorama__stage__shaft, .fotorama__stage__frame').forEach(function(el) {
+      el.style.minHeight = '500px';
+      el.style.maxHeight = '500px';
+    });
+  }
+
+  // Aplicar inmediatamente
+  forceDimensions();
+
+  // Aplicar en DOMContentLoaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', forceDimensions);
+  }
+
+  // Loop reducido - solo 3 iteraciones rápidas
+  var counter = 0;
+  var interval = setInterval(function() {
+    forceDimensions();
+    counter++;
+    if (counter >= 3) clearInterval(interval);
+  }, 50);
+
+  // MutationObserver para cambios dinámicos
+  var observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.addedNodes.length) {
+        mutation.addedNodes.forEach(function(node) {
+          if (node.nodeType === 1) {
+            // Si es una imagen de Fotorama, forzar dimensiones inmediatamente
+            if (node.classList && (node.classList.contains('fotorama__img') || node.tagName === 'IMG')) {
+              forceDimensions();
+            }
+            // Si tiene hijos, buscar imágenes dentro
+            if (node.querySelectorAll) {
+              var imgs = node.querySelectorAll('.fotorama__img, img.fotorama__img');
+              if (imgs.length) forceDimensions();
+            }
+          }
+        });
+      }
+    });
+  });
+
+  observer.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class', 'style', 'src']
+  });
+
+  // Cleanup después de 10 segundos (cuando Fotorama ya está estable)
+  setTimeout(function() {
+    observer.disconnect();
+    clearInterval(interval);
+  }, 10000);
+})();
+</script>
+
+<script type="text/x-magento-init">
+{
+    "[data-gallery-role=gallery-placeholder]": {
+        "mage/gallery/gallery": {
+            "mixins": ["magnifier/magnify"],
+            "magnifierOpts": <?= /* @noEscape */ $block->getMagnifier() ?>,
+<?php
+    // Obtener y modificar las imágenes para usar .webp
+    $galleryJson = $block->getGalleryImagesJson();
+    $webpJson = preg_replace('/\.(jpe?g|png)(?=")/i', '.webp', $galleryJson);
+?>
+<?php
+$options = json_decode($block->getGalleryOptions()->getOptionsJson(), true) ?: [];
+$options['preload'] = 0;        // No precargar imágenes
+$options['fit'] = 'contain';
+$options['ratio'] = 1;
+$options['spinner'] = false;    // Desactivar spinner (mejora performance)
+$options['keyboard'] = false;   // Desactivar navegación por teclado (opcional)
+?>
+            "data": <?= /* @noEscape */ $webpJson ?>,
+            "options": <?= /* @noEscape */ json_encode($options, JSON_UNESCAPED_SLASHES)?>,
+            "fullscreen": <?= /* @noEscape */ $block->getGalleryOptions()->getFSOptionsJson() ?>,
+            "breakpoints": <?= /* @noEscape */ $block->getBreakpoints() ?>
+        }
+    }
+}
+</script>
+
+<script>
+require(['jquery'], function ($) {
+  var ACTIVE_FRAME_SEL = '.fotorama__stage__frame.fotorama__active, .fotorama__stage__frame[data-active="true"]';
+  var IMG_SEL = 'img.fotorama__img, img.fotorama__img--full';
+  var firstImageProcessed = false;
+
+  function stampActive() {
+    var $activeFrame = $(ACTIVE_FRAME_SEL).first();
+    var $activeImg = $activeFrame.find(IMG_SEL).first();
+
+    if ($activeImg.length) {
+      var isFirstImage = !firstImageProcessed;
+
+      // CRÍTICO: Forzar dimensiones SIEMPRE
+      $activeImg.css({
+    'width': 'auto',
+    'height': 'auto',
+    'max-width': '100%',
+    'max-height': '100%',
+    'object-fit': 'contain'
+  });
+  $activeImg.attr('width', '500');
+  $activeImg.attr('height', '500');
+
+  if (isFirstImage) {
+    console.log('LCP Image detected and optimized'); // DEBUG
+    // Primera imagen: eager + high priority (LCP)
+    $activeImg.attr({
+      'loading': 'eager',
+      'fetchpriority': 'high'
+    }).removeAttr('decoding');
+    firstImageProcessed = true;
+  }else {
+// Imágenes subsecuentes: LAZY (no eager)
+$activeImg.attr({
+  'loading': 'lazy',
+  'fetchpriority': 'low',
+  'decoding': 'async'
+});
+}
+
+      // Resto de imágenes NO activas: lazy loading + dimensiones forzadas
+      $activeFrame.siblings().find(IMG_SEL).each(function () {
+        var $img = $(this);
+
+        // Forzar dimensiones
+        $img.css({
+    'width': 'auto',
+    'height': 'auto',
+    'max-width': '100%',
+    'max-height': '100%',
+    'object-fit': 'contain'
+  });
+  $img.attr('width', '500');
+  $img.attr('height', '500');
+
+        // Solo aplicar lazy si no tiene eager ya
+        if ($img.attr('loading') !== 'eager') {
+          $img.attr({
+            'loading': 'lazy',
+            'decoding': 'async',
+            'fetchpriority': 'low'
+          });
+        }
+      });
+
+      return true;
+    }
+    return false;
+  }
+
+  // 1) Delegado en documento
+  $(document).on('fotorama:ready fotorama:load fotorama:show fotorama:showend', '.fotorama', function () {
+    setTimeout(stampActive, 0);
+  });
+
+  // 2) Loop de arranque agresivo para la primera imagen
+  (function boostStartup(attempts, delay) {
+    var ok = stampActive();
+    if (!ok && attempts > 0) {
+      setTimeout(function(){ boostStartup(attempts - 1, delay); }, delay);
+    }
+  })(30, 100);
+
+  // 3) MutationObserver
+  function attachObserver() {
+    var stage = document.querySelector('.fotorama__stage__shaft');
+    if (!stage) return false;
+    var mo = new MutationObserver(function(){ stampActive(); });
+    mo.observe(stage, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class', 'data-active', 'src']
+    });
+    return true;
+  }
+
+  var t = 0, iv = setInterval(function(){
+    if (attachObserver() || ++t > 20) clearInterval(iv);
+  }, 150);
+
+  // Seguridad extra
+  $(window).on('load pageshow', function(){
+    setTimeout(stampActive, 150);
+  });
+
+  // Aplicar lazy loading + dimensiones a miniaturas del nav
+  $(document).on('fotorama:ready', '.fotorama', function () {
+    setTimeout(function() {
+      $('.fotorama__nav__frame').each(function(index) {
+        var $thumbImg = $(this).find('img');
+        if ($thumbImg.length) {
+          // Forzar dimensiones en thumbnails
+          $thumbImg.css({
+            'width': '88px',
+            'height': '88px',
+            'max-width': '88px',
+            'max-height': '88px',
+            'object-fit': 'cover'
+          });
+          $thumbImg.attr('width', '88');
+          $thumbImg.attr('height', '88');
+
+          if (index > 0) {
+            $thumbImg.attr({
+              'loading': 'lazy',
+              'decoding': 'async'
+            });
+          }
+        }
+      });
+    }, 100);
+  });
+});
+</script>

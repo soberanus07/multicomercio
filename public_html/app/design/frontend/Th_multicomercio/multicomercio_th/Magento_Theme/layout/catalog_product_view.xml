@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!--
+  Override para añadir inline-style a product-info-main
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+      <head>
+        <link rel="preconnect" href="https://www.multicomercio.cl" crossorigin/>
+    <link rel="dns-prefetch" href="https://www.multicomercio.cl"/>
+              <style type="text/css">
+                  /* CRITICAL CSS para prevenir CLS - Paso 1 */
+                  .product.media{min-height:600px!important;contain:layout style paint}
+                  .gallery-placeholder,[data-gallery-role=gallery-placeholder]{min-height:500px!important;max-width:500px;aspect-ratio:1/1;contain:layout style paint;margin:0 auto}
+                  .fotorama{min-height:500px!important;max-height:500px!important;width:100%!important}
+                  .fotorama__stage{min-height:500px!important;max-height:500px!important}
+                  .fotorama__stage__shaft{min-height:500px!important;max-height:500px!important;transition:none!important}
+                  .fotorama__stage__frame{min-height:500px!important;max-height:500px!important}
+                  .fotorama__img,img.fotorama__img{width:500px!important;height:500px!important;max-width:500px!important;max-height:500px!important;object-fit:contain!important}
+                  .fotorama__nav-wrap{min-height:100px!important;max-height:100px!important}
+                  .fotorama__thumb{width:88px!important;height:88px!important}
+                  .product-info-main{min-height:500px;contain:layout style}
+                  @media(max-width:768px){
+                      .product.media{min-height:400px}
+                      .gallery-placeholder,[data-gallery-role=gallery-placeholder],.fotorama,.fotorama__stage,.fotorama__stage__shaft,.fotorama__stage__frame{min-height:300px!important;max-height:300px!important}
+                      .fotorama__img,img.fotorama__img{width:300px!important;height:300px!important}
+                  }
+              </style>
+          </head>
+
+    <body>
+        <!-- Referenciamos el contenedor product.info.main -->
+        <referenceContainer name="product.info.main">
+
+        </referenceContainer>
+    </body>
+</page>

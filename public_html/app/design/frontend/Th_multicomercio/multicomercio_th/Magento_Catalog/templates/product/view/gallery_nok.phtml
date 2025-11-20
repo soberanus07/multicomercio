@@ -1,0 +1,102 @@
+<?php
+/**
+ * Product media data template
+ *
+ * @var $block \Magento\Catalog\Block\Product\View\Gallery
+ */
+
+$images = $block->getGalleryImages()->getItems();
+$mainImage = current(array_filter($images, function ($img) use ($block) {
+    return $block->isMainImage($img);
+}));
+
+if (!$mainImage && !empty($images)) {
+    $mainImage = $block->getGalleryImages()->getFirstItem();
+}
+
+$helper = $block->getData('imageHelper');
+$mainImageUrl = $mainImage && method_exists($mainImage, 'getUrl')
+    ? $mainImage->getUrl()
+    : $helper->getDefaultPlaceholderUrl('image');
+
+// Si la imagen tiene versión WebP, úsala si está disponible
+$webpImageUrl = '';
+if ($mainImage && $mainImage->getFile()) {
+    $originalFile = $mainImage->getFile(); // Ej: /m/y/myimage.jpg
+    $webpCandidate = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $originalFile);
+    $mediaUrl = $block->getViewFileUrl(''); // base media URL
+    $webpImageUrl = $mediaUrl . 'catalog/product' . $webpCandidate;
+}
+?>
+
+<?php
+// Imagen principal para SEO
+$imageSeoUrl = $this->helper('Magento\Catalog\Helper\Image')
+    ->init($block->getProduct(), 'product_page_image_large')
+    ->setImageFile($block->getImageFile())
+    ->getUrl();
+?>
+<meta itemprop="image" content="<?= $imageSeoUrl ?>">
+
+<div class="gallery-placeholder _block-content-loading" data-gallery-role="gallery-placeholder">
+    <picture>
+        <?php if (!empty($webpImageUrl)): ?>
+            <source srcset="<?= $webpImageUrl ?>" type="image/webp">
+        <?php endif; ?>
+        <img
+            alt="<?= $block->escapeHtmlAttr($block->getProduct()->getName()) ?>"
+            class="gallery-placeholder__image"
+            src="<?= $mainImageUrl ?>"
+            loading="lazy"
+            width="600"
+            height="600"
+        />
+    </picture>
+</div>
+
+<script type="text/x-magento-init">
+{
+    "[data-gallery-role=gallery-placeholder]": {
+        "mage/gallery/gallery": {
+            "mixins": ["magnifier/magnify"],
+            "magnifierOpts": <?= /* @noEscape */ $block->getMagnifier() ?>,
+            "data": <?= /* @noEscape */ $block->getGalleryImagesJson() ?>,
+<?php
+$options = json_decode($block->getGalleryOptions()->getOptionsJson(), true);
+$options['lazyload'] = true;
+?>
+            "options": <?= /* @noEscape */ json_encode($options) ?>,
+            "fullscreen": <?= /* @noEscape */ $block->getGalleryOptions()->getFSOptionsJson() ?>,
+            "breakpoints": <?= /* @noEscape */ $block->getBreakpoints() ?>
+        }
+    }
+}
+</script>
+
+<script>
+require(['jquery'], function($) {
+    function applyLazyAndSizeToFotoramaImages() {
+        $('.fotorama__img').each(function () {
+            if (!this.hasAttribute('loading')) {
+                this.setAttribute('loading', 'lazy');
+            }
+            if (!this.hasAttribute('width') && this.naturalWidth) {
+                this.setAttribute('width', this.naturalWidth);
+            }
+            if (!this.hasAttribute('height') && this.naturalHeight) {
+                this.setAttribute('height', this.naturalHeight);
+            }
+        });
+    }
+
+    // Aplicar después de cambio de imagen
+    $(document).on('fotorama:showend fotorama:load', function () {
+        applyLazyAndSizeToFotoramaImages();
+    });
+
+    // Asegurarse después de cargar la página
+    $(window).on('load', function () {
+        setTimeout(applyLazyAndSizeToFotoramaImages, 500);
+    });
+});
+</script>

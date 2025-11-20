@@ -1,0 +1,8 @@
+"Error Phone","Ingresa un número de teléfono de 9 dígitos","module","MovistarEmp_Solicitud"
+"Error RUT","Ingresa un RUT válido","module","MovistarEmp_Solicitud"
+"Error Email","Ingresa un email válido","module","MovistarEmp_Solicitud"
+"Error Phone Tag","Teléfono","module","MovistarEmp_Solicitud"
+"Error RUT Tag","RUT","module","MovistarEmp_Solicitud"
+"Error Email Tag","Email","module","MovistarEmp_Solicitud"
+"Error Form Category Tag","Error Solicitud Catalogo","module","MovistarEmp_Solicitud"
+"Error Form Action Tag","Error Formulario Catalogo","module","MovistarEmp_Solicitud"

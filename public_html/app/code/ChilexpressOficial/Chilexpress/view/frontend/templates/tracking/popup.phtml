@@ -1,0 +1,152 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+use Magento\Framework\View\Element\Template;
+
+/** @var $block \Magento\Shipping\Block\Tracking\Popup */
+//phpcs:disable Magento2.Files.LineLength.MaxExceeded
+
+$results = $block->getTrackingInfo();
+$CHILEXPRESS_KEY = 'chilexpress';
+?>
+<div class="page tracking">
+    <?php if (!empty($results)) : ?>
+        <?php foreach ($results as $shipId => $result) : ?>
+            <?php if ($shipId) : ?>
+                <div class="order subtitle caption"><?= /* @noEscape */ $block->escapeHtml(__('Shipment #')) . $shipId ?></div>
+            <?php endif; ?>
+            <?php if (!empty($result)) : ?>
+                <?php foreach ($result as $counter => $track) :  ?>
+                    <?php  if (isset($track[$CHILEXPRESS_KEY]) && is_object($track[$CHILEXPRESS_KEY])): ?>
+                        <h2>Orden de Transporte Nº <?= $block->escapeHtml($track[$CHILEXPRESS_KEY]->transportOrderData->transportOrderNumber) ?></h2>
+                        <div class="table-wrapper" style="width:100%;">
+                            <!-- //NOSONAR --><table class="data table order tracking" width="100%">
+                                <tbody>
+                                    <tr>
+                                        <td width="20%"><strong>Producto</strong></td>
+                                        <td><?= $block->escapeHtml($track[$CHILEXPRESS_KEY]->transportOrderData->product) ?></td>
+                                        <td></td>
+                                        <td><strong>Dimensiones</strong></td>
+                                        <td><?= $block->escapeHtml($track[$CHILEXPRESS_KEY]->transportOrderData->dimensions) ?> cm</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Servicio</strong></td>
+                                        <td><?= $block->escapeHtml($track[$CHILEXPRESS_KEY]->transportOrderData->service) ?></td>
+                                        <td></td>
+                                        <td><strong>Peso</strong></td>
+                                        <td><?= $block->escapeHtml($track[$CHILEXPRESS_KEY]->transportOrderData->weight) ?> Kg</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Estado</strong></td>
+                                        <td><?= $block->escapeHtml($track[$CHILEXPRESS_KEY]->transportOrderData->status) ?></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="table-wrapper" style="width:100%;">
+                            <h3>Datos de entrega</h3>
+                            <!-- //NOSONAR --><table class="data table order tracking" width="100%">
+                                <tbody>
+                                    <tr>
+                                        <td width="20%"><strong>Rut Receptor</strong></td>
+                                        <td><?= $block->escapeHtml($track[$CHILEXPRESS_KEY]->deliveryData->receptorRut) ?></td>
+                                        <td></td>
+                                        <td><strong>Nombre Receptor</strong></td>
+                                        <td><?= $block->escapeHtml($track[$CHILEXPRESS_KEY]->deliveryData->receptorName) ?></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Fecha de Entrega</strong></td>
+                                        <td><?= $block->escapeHtml($track[$CHILEXPRESS_KEY]->deliveryData->deliveryDate) ?></td>
+                                        <td></td>
+                                        <td><strong>Hora Entrega</strong></td>
+                                        <td><?= $block->escapeHtml($track[$CHILEXPRESS_KEY]->deliveryData->deliveryHour) ?></td>
+                                    </tr>
+                                
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="table-wrapper" style="width:100%;">
+                            <h3>Eventos</h3>
+                            <!-- //NOSONAR --><table class="data table order tracking" width="100%">
+                                <thead>
+                                    <!-- //NOSONAR --><th width="25%">Fecha</th>
+                                    <!-- //NOSONAR --><th width="25%">Hora</th>
+                                    <!-- //NOSONAR --><th>Descripción</th>
+                                </thead>
+                                <tbody>
+                                    <?php if( count($track[$CHILEXPRESS_KEY]->trackingEvents) == 0 ): ?>
+                                    <tr>
+                                        <td colspan="3" style="text-align:center;">No existen eventos aún para este envio.</td>
+                                    </tr>
+                                    <?php else: ?>
+                                    <?php   foreach($track[$CHILEXPRESS_KEY]->trackingEvents as $event): ?>
+                                    <tr>
+                                        <td><?= $block->escapeHtml($event->eventDate) ?></td>
+                                        <td><?= explode('.', $block->escapeHtml($event->eventHour))[0] ?></td>
+                                        <td><?= $block->escapeHtml($event->description) ?></td>
+                                    </tr>
+                                    <?php   endforeach; ?>
+                                    <?php endif; ?>
+                                
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php  else: ?>
+                        <div class="table-wrapper">
+                            <?php
+                                $shipmentBlockIdentifier = $shipId . '.' . $counter;
+                                $block->addChild('shipping.tracking.details.' . $shipmentBlockIdentifier, Template::class, [
+                                    'track' => $track,
+                                    'template' => 'Magento_Shipping::tracking/details.phtml',
+                                    'storeSupportEmail' => $block->getStoreSupportEmail()
+                                ]);
+                            ?>
+                            <?= /* @noEscape */ $block->getChildHtml('shipping.tracking.details.' . $shipmentBlockIdentifier) ?>
+                        </div>
+                        <?php if (is_object($track) && !empty($track->getProgressdetail())) : ?>
+                            <?php
+                                $block->addChild('shipping.tracking.progress.' . $shipmentBlockIdentifier, Template::class, [
+                                    'track' => $track,
+                                    'template' => 'Magento_Shipping::tracking/progress.phtml'
+                                ]);
+                            ?>
+                            <?= /* @noEscape */ $block->getChildHtml('shipping.tracking.progress.' . $shipmentBlockIdentifier) ?>
+                    <?php endif; ?>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            <?php else : ?>
+                <div class="message info empty">
+                    <div><?= $block->escapeHtml(__('There is no tracking available for this shipment.')) ?></div>
+                </div>
+            <?php endif; ?>
+        <?php endforeach; ?>
+    <?php else : ?>
+        <div class="message info empty">
+            <div><?= $block->escapeHtml(__('There is no tracking available.')) ?></div>
+        </div>
+    <?php endif; ?>
+    <div class="actions">
+        <button type="button"
+                title="<?= $block->escapeHtmlAttr(__('Close Window')) ?>"
+                class="action close"
+                onclick="window.close(); window.opener.focus();">
+            <span><?= $block->escapeHtml(__('Close Window')) ?></span>
+        </button>
+    </div>
+</div>
+<script>
+    require([
+        'jquery'
+    ], function (jQuery) {
+        /* hide the close button when the content doesn't open in a modal window */
+        if (window.opener === null || typeof window.opener === "undefined") {
+            jQuery('.actions button.close').hide();
+        }
+    });
+</script>

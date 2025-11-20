@@ -1,0 +1,82 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+?>
+
+<?php /** @var $block \Magento\Framework\Pricing\Render\Amount */ ?>
+
+<span class="price-container <?= $block->escapeHtmlAttr($block->getAdjustmentCssClasses()) ?>"
+        <?= $block->getSchema() ? ' itemprop="offers" itemscope itemtype="http://schema.org/Offer"' : '' ?>>
+    <?php if ($block->getDisplayLabel()) :?>
+        <span class="price-label"><?= $block->escapeHtml($block->getDisplayLabel()) ?></span>
+    <?php endif; ?>
+    <span <?php if ($block->getPriceId()) :?> id="<?= $block->escapeHtmlAttr($block->getPriceId()) ?>"<?php endif;?>
+        <?= ($block->getPriceDisplayLabel()) ? 'data-label="' . $block->escapeHtmlAttr($block->getPriceDisplayLabel() . $block->getPriceDisplayInclExclTaxes()) . '"' : '' ?>
+        data-price-amount="<?= $block->escapeHtmlAttr($block->getDisplayValue()) ?>"
+        data-price-type="<?= $block->escapeHtmlAttr($block->getPriceType()) ?>"
+        class="price-wrapper <?= $block->escapeHtmlAttr($block->getPriceWrapperCss()) ?>"
+    ><?= $block->escapeHtml($block->formatCurrency($block->getDisplayValue(), (bool)$block->getIncludeContainer()), ['span']) ?></span>
+    <?php if ($block->hasAdjustmentsHtml()) :?>
+        <?= $block->getAdjustmentsHtml() ?>
+    <?php endif; ?>
+    <?php if ($block->getSchema()) :?>
+        <meta itemprop="price" content="<?= $block->escapeHtmlAttr($block->getDisplayValue()) ?>" />
+        <meta itemprop="priceCurrency" content="<?= $block->escapeHtmlAttr($block->getDisplayCurrencyCode()) ?>" />
+        <?php
+    // SaleableItem suele ser el producto en este contexto
+    $item = method_exists($block, 'getSaleableItem') ? $block->getSaleableItem() : null;
+    $inStock = ($item && method_exists($item, 'isAvailable')) ? $item->isAvailable() : true;
+    $availability = 'https://schema.org/' . ($inStock ? 'InStock' : 'OutOfStock');
+    $priceValidUntil = (new \DateTime('+1 year'))->format('Y-m-d');
+    ?>
+    <link itemprop="availability" href="<?= $availability ?>" />
+    <link itemprop="itemCondition" href="https://schema.org/NewCondition" />
+    <meta itemprop="priceValidUntil" content="<?= $block->escapeHtmlAttr($priceValidUntil) ?>" />
+    <?php
+// evita duplicados: solo en el precio principal
+$isFinal = strtolower((string)$block->getPriceType()) === 'finalprice';
+
+// datos auxiliares
+$currency = $block->escapeHtmlAttr($block->getDisplayCurrencyCode());
+$shippingValue = 2990; // CLP. Ajusta si corresponde
+?>
+<?php if ($isFinal): ?>
+  <!-- shippingDetails -->
+  <span itemprop="shippingDetails" itemscope itemtype="https://schema.org/OfferShippingDetails" style="display:none">
+    <span itemprop="shippingDestination" itemscope itemtype="https://schema.org/DefinedRegion">
+      <meta itemprop="addressCountry" content="CL" />
+    </span>
+
+    <span itemprop="deliveryTime" itemscope itemtype="https://schema.org/ShippingDeliveryTime">
+      <span itemprop="handlingTime" itemscope itemtype="https://schema.org/QuantitativeValue">
+        <meta itemprop="minValue" content="1" />
+        <meta itemprop="maxValue" content="2" />
+        <meta itemprop="unitCode" content="d" />
+      </span>
+      <span itemprop="transitTime" itemscope itemtype="https://schema.org/QuantitativeValue">
+        <meta itemprop="minValue" content="2" />
+        <meta itemprop="maxValue" content="5" />
+        <meta itemprop="unitCode" content="d" />
+      </span>
+    </span>
+
+    <span itemprop="shippingRate" itemscope itemtype="https://schema.org/MonetaryAmount">
+      <meta itemprop="value" content="<?= (int)$shippingValue ?>" />
+      <meta itemprop="currency" content="<?= $currency ?>" />
+    </span>
+  </span>
+
+  <!-- hasMerchantReturnPolicy -->
+  <span itemprop="hasMerchantReturnPolicy" itemscope itemtype="https://schema.org/MerchantReturnPolicy" style="display:none">
+    <meta itemprop="applicableCountry" content="CL" />
+    <link itemprop="returnPolicyCategory" href="https://schema.org/MerchantReturnFiniteReturnWindow" />
+    <meta itemprop="merchantReturnDays" content="10" />
+    <link itemprop="returnMethod" href="https://schema.org/ReturnByMail" />
+    <link itemprop="returnFees" href="https://schema.org/FreeReturn" />
+  </span>
+<?php endif; ?>
+
+    <?php endif; ?>
+</span>

@@ -1,0 +1,8 @@
+{
+    "readiness_checks": {
+        "error": "<br/>Found non-writable path(s):<br/>/Applications/mampstack-7.3.12-0/apps/multicomercio/htdocs/var/.htaccess",
+        "file_permissions_verified": false
+    },
+    "last_timestamp": 1577722082,
+    "current_timestamp": 1577722141
+}

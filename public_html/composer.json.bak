@@ -1,0 +1,101 @@
+{
+    "name": "magento/project-community-edition",
+    "description": "eCommerce Platform for Growth (Community Edition)",
+    "type": "project",
+    "license": [
+        "OSL-3.0",
+        "AFL-3.0"
+    ],
+    "config": {
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "magento/magento-composer-installer": true,
+            "laminas/laminas-dependency-plugin": true,
+            "magento/composer-dependency-version-audit-plugin": true,
+            "magento/inventory-composer-installer": true,
+            "magento/composer-root-update-plugin": true
+        }
+    },
+    "require": {
+        "laminas/laminas-log": "^2.15",
+        "magento/composer-root-update-plugin": "~2.0",
+        "magento/module-page-builder": "2.2.2",
+        "magento/product-community-edition": "2.4.4",
+        "magento/quality-patches": "^1.1",
+        "mercadopago/adb-payment": "*",
+        "mp-plugins/php-sdk": "1.12.*",
+        "outeredge/magento-structured-data-module": "^4.0",
+        "plumrocket/lazy-load-metapackage": "^1.0",
+        "sendinblue/module-sendinblue": "^2.1",
+        "tecnickcom/tcpdf": "^6.3",
+        "transbank/webpay-magento2-rest": "^2.3"
+
+    },
+    "require-dev": {
+        "allure-framework/allure-phpunit": "~1.2.0",
+        "friendsofphp/php-cs-fixer": "~2.14.0",
+        "lusitanian/oauth": "~0.8.10",
+        "magento/magento-coding-standard": "~3.0.0",
+        "pdepend/pdepend": "2.5.2",
+        "phpmd/phpmd": "@stable",
+        "phpunit/phpunit": "~6.5.0",
+        "sebastian/phpcpd": "~3.0.0",
+        "squizlabs/php_codesniffer": "~3.4.0"
+    },
+    "conflict": {
+        "gene/bluefoot": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Magento\\Framework\\": "lib/internal/Magento/Framework/",
+            "Magento\\Setup\\": "setup/src/Magento/Setup/",
+            "Magento\\": "app/code/Magento/",
+            "Zend\\Mvc\\Controller\\": "setup/src/Zend/Mvc/Controller/"
+        },
+        "psr-0": {
+            "": [
+                "app/code/",
+                "generated/code/"
+            ]
+        },
+        "files": [
+            "app/etc/NonComposerComponentRegistration.php"
+        ],
+        "exclude-from-classmap": [
+            "**/dev/**",
+            "**/update/**",
+            "**/Test/**"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Magento\\Sniffs\\": "dev/tests/static/framework/Magento/Sniffs/",
+            "Magento\\Tools\\": "dev/tools/Magento/Tools/",
+            "Magento\\Tools\\Sanity\\": "dev/build/publication/sanity/Magento/Tools/Sanity/",
+            "Magento\\TestFramework\\Inspection\\": "dev/tests/static/framework/Magento/TestFramework/Inspection/",
+            "Magento\\TestFramework\\Utility\\": "dev/tests/static/framework/Magento/TestFramework/Utility/"
+        }
+    },
+    "version": "2.3.3",
+    "minimum-stability": "stable",
+    "repositories": {
+        "transbank": {
+            "type": "vcs",
+            "url": "https://github.com/TransbankDevelopers/transbank-plugin-magento2-webpay-rest"
+        },
+        "0": {
+            "type": "composer",
+            "url": "https://repo.magento.com/"
+        },
+        "1": {
+            "type": "vcs",
+            "url": "https://github.com/TransbankDevelopers/transbank-plugin-magento2-webpay.git"
+        },
+        "2": {
+            "type": "vcs",
+            "url": "https://github.com/mercadopago/pp-php-sdk.git"
+        },
+        "packagist.org": false
+    }
+}

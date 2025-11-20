@@ -1,0 +1,96 @@
+# Directorios adicionales
+.HttpRequest/
+.MirrorSearch/
+.bash_history
+.cache/
+.config/
+.contactemail
+.cpan/
+.cpcpan/
+.cpobjcache/
+.ftpquota
+.gemrc
+.gnupg/
+.htaccess
+.local/
+.pearrc
+.permslog
+.razor/
+.security/
+.ssh/
+.subaccounts/
+.trash/
+.user.ini
+.zshrc
+composer.phar
+etc/
+perl5
+php.ini
+php/
+public_ftp/
+
+# Backups y subdominios
+*.tar
+public_html_backup_*/
+public_html_multicomercio/
+public_html_presta/
+asesoriasxf.multicomercio.cl/
+pre.multicomercio.cl/
+tienda.multicomercio.cl/
+
+# Solo versionamos public_html principal
+# Archivos del sistema/cPanel
+.bash_logout
+.bash_profile
+.bashrc
+.cpanel/
+.cphorde/
+.lastlogin
+.softaculous/
+.spamassassin/
+.spamassassinboxenable
+.spamassassinenable
+.imunify_patch_id
+.myimunify_id
+access-logs
+logs/
+mail/
+ssl/
+tmp/
+www
+
+# Credenciales Magento
+public_html/app/etc/env.php
+public_html/app/etc/config.php
+public_html/auth.json*
+
+# Vendor
+public_html/vendor/
+
+# Cache y temporales
+public_html/var/
+public_html/pub/static/
+public_html/generated/
+
+# Media
+public_html/pub/media/catalog/
+public_html/pub/media/customer/
+public_html/pub/media/wysiwyg/
+
+# Logs
+*.log
+
+# Backups
+*.sql
+*.sql.gz
+*.tar.gz
+*.zip
+
+# Sistema
+.DS_Store
+.idea/
+*.swp
+
+# Magepack
+public_html/tools/magepack/
+public_html/elasticsearch-7.9.2-x86_64.rpm

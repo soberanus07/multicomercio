@@ -1,0 +1,65 @@
+<?php
+/** @var \Magento\Catalog\Model\Product $product */
+$product = $block->getProduct() ?: $block->getLayout()->getBlock('product.info')->getProduct();
+$productName = $product ? $product->getName() : '';
+$phone = '+56995459331'; // Reemplaza con tu número de WhatsApp
+$message = rawurlencode("Hola, estoy interesado en el producto \"$productName\" que vi en su sitio.");
+?>
+<style>
+@media (min-width: 769px) {
+    .whatsapp-product-button {
+        display: none !important;
+    }
+}
+.whatsapp-product-button {
+    display: block;
+    background-color: #25d366;
+    color: #ffffff !important;
+    font-weight: 600;
+    padding: 10px 16px;
+    border-radius: 10px;
+    margin-top: 8px;
+    font-size: 16px;
+    text-align: center;
+    text-decoration: none !important;
+    transition: background-color 0.3s ease;
+}
+
+.whatsapp-product-button:hover {
+    background-color: #1ebe5c;
+    color: #ffffff !important;
+    text-decoration: none !important;
+}
+
+.whatsapp-product-button svg {
+    vertical-align: middle;
+    margin-right: 8px;
+    width: 18px;
+    height: 18px;
+    fill: #ffffff;
+}
+</style>
+
+
+<a class="whatsapp-product-button"
+   href="https://wa.me/<?= str_replace(['+', ' '], '', $phone) ?>?text=<?= $message ?>"
+   onclick="return gtag_report_conversion(this.href);">
+   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+     <path d="M4 4h16v12H5.17L4 17.17V4zm0-2a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H4z"/>
+   </svg>
+   Chatear
+</a>
+<script>
+function gtag_report_conversion(url) {
+  var callback = function () {
+    if (typeof(url) != 'undefined') {
+      window.location = url;
+    }
+  };
+  gtag('event', 'conversion', {
+      'send_to': 'AW-16991196841/_l77CKXI4PgaEKmthKY_',
+      'event_callback': callback
+  });
+  return false;
+}
+</script>

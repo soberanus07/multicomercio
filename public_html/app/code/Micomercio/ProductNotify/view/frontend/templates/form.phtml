@@ -1,0 +1,172 @@
+<?php
+/** @var \Micomercio\ProductNotify\Block\Form $block */
+$product = $block->getProduct();
+if (!$product || $product->isAvailable()) return;
+?>
+
+<style>
+
+@media (max-width: 768px) {
+    .product-notify-button {
+        width: 100%;
+        padding: 10px 16px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 10px;
+        text-align: center;
+        display: block;
+        box-sizing: border-box;
+        justify-content: center;
+    }
+}
+
+
+
+.product-notify-button {
+    background-color: #f0ad4e;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.product-notify-button:hover {
+    background-color: #e89c3f;
+}
+
+.product-notify-button svg {
+    width: 18px;
+    height: 18px;
+    fill: #fff;
+}
+</style>
+
+<button type="button" class="product-notify-button notify-trigger" data-mage-init='{"Micomercio_ProductNotify/js/modal":{}}'>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+        <path d="M224 512a64 64 0 0 0 64-64H160a64 64 0 0 0 64 64zm215.4-149.1c-20.9-22.2-55.5-55.5-55.5-154.9
+        0-77.7-54.5-139.1-127.1-155.2V32c0-17.7-14.3-32-32-32s-32
+        14.3-32 32v20.8C118.5 63.9 64 125.3 64 203c0 99.4-34.6
+        132.6-55.5 154.9A31.9 31.9 0 0 0 0 384c0 17.7 14.3 32 32
+        32h384c17.7 0 32-14.3 32-32 0-7.9-3.1-15.6-8.6-21.1z"/>
+    </svg>
+    <?= __('Avísame cuando llegue') ?>
+</button>
+
+<!-- Modal con formulario -->
+<div id="product-notify-modal" style="display: none;">
+    <div class="product-notify-wrapper">
+        <form id="product-notify-form" action="<?= $block->getFormAction() ?>" method="post" class="product-notify-form">
+            <input type="hidden" name="form_key" value="<?= $block->getFormKey() ?>" />
+            <input type="hidden" name="product_sku" value="<?= $product->getSku() ?>" />
+
+
+            <div class="field required">
+                <label><?= __('Nombre') ?></label>
+                <input type="text" name="name" required />
+            </div>
+            <div class="field required">
+                <label><?= __('Correo electrónico') ?></label>
+                <input type="email" name="email" required />
+            </div>
+            <div class="field">
+                <label><?= __('Teléfono (opcional)') ?></label>
+                <input type="text" name="phone" />
+            </div>
+            <div style="display: none;">
+              <input type="text" name="company" value="" autocomplete="off" />
+            </div>
+            <div class="actions">
+                <button type="submit" class="action primary">
+                    <span><?= __('Enviar solicitud') ?></span>
+                </button>
+            </div>
+        </form>
+        <div id="product-notify-success" style="display: none; text-align: center; padding: 20px;">
+            <p><strong><?= __('¡Gracias! Te avisaremos cuando el producto esté disponible.') ?></strong></p>
+
+
+        </div>
+    </div>
+
+
+</div>
+<!-- Script de conversión de Google Ads -->
+<script>
+function gtag_report_conversion(url) {
+  console.log('[Google Ads] Disparando conversión...');
+
+  var callback = function () {
+    console.log('[Google Ads] Callback ejecutado');
+    if (typeof(url) !== 'undefined') {
+      window.location = url;
+    }
+  };
+
+  gtag('event', 'conversion', {
+    'send_to': 'AW-16991196841/u6nRCJeP9PcaEKmthKY_',
+    'event_callback': callback
+  });
+
+  return false;
+}
+</script>
+
+<script>
+require(['jquery'], function ($) {
+  $(document).ready(function () {
+    const $form = $('#product-notify-form');
+
+    async function sha256(str) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(str.trim().toLowerCase());
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    $form.on('submit', async function () {
+      const email = $form.find('input[name="email"]').val();
+      const name = $form.find('input[name="name"]').val();
+      const phone = $form.find('input[name="phone"]').val();
+
+      const hashedEmail = email ? await sha256(email) : null;
+      const hashedPhone = phone ? await sha256(phone) : null;
+
+      let hashedFirstName = null;
+      let hashedLastName = null;
+
+      if (name) {
+        const parts = name.trim().split(' ');
+        hashedFirstName = await sha256(parts[0]);
+        if (parts.length > 1) {
+          hashedLastName = await sha256(parts.slice(1).join(' '));
+        }
+      }
+
+      gtag('set', 'user_data', {
+        <?php if (!$block->isScopePrivate()): ?>
+        <?php /* No usamos condicionales dinámicos para los valores JS, sino solo bloqueamos todo si es página cacheada */ ?>
+        <?php endif; ?>
+        <?php // El resto es seguro porque está en JS puro ?>
+        ...(hashedEmail && { email: hashedEmail }),
+        ...(hashedPhone && { phone_number: hashedPhone }),
+        ...(hashedFirstName && { first_name: hashedFirstName }),
+        ...(hashedLastName && { last_name: hashedLastName })
+      });
+
+      // Disparar conversión después de preparar user_data
+      setTimeout(function () {
+        gtag_report_conversion();
+      }, 300);
+    });
+  });
+});
+</script>

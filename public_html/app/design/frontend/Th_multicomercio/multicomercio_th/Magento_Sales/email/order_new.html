@@ -1,0 +1,90 @@
+<!-- Plantilla de Correo: Confirmación de Pedido -->
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <style>
+    /* Estilos inline recomendados para compatibilidad */
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
+    .container { width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; }
+    .header { padding: 20px; text-align: center; background-color: #0a74da; }
+    .logo { max-width: 150px; }
+    .content { padding: 20px; color: #333333; }
+    .order-details { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    .order-details th, .order-details td { border: 1px solid #dddddd; padding: 8px; text-align: left; }
+    .button { display: inline-block; padding: 10px 20px; background-color: #0a74da; color: #ffffff; text-decoration: none; border-radius: 4px; }
+    .footer { padding: 20px; text-align: center; font-size: 12px; color: #777777; }
+    @media (max-width: 600px) {
+      .container { width: 100% !important; }
+    }
+  </style>
+</head>
+<body>
+  <table class="container">
+    <tr>
+      <td class="header">
+        <img src="{{var logo_url}}" alt="{{var logo_alt}}" class="logo" />
+      </td>
+    </tr>
+    <tr>
+      <td class="content">
+        <h2>Hola {{var customer_name}},</h2>
+        <p>¡Gracias por tu compra! Tu pedido <strong>#{{var order.increment_id}}</strong> ha sido confirmado.</p>
+
+        <h3>Resumen de tu pedido:</h3>
+        <table class="order-details">
+          <tr>
+            <th>Producto</th><th>Cantidad</th><th>Precio</th>
+          </tr>
+          {{depend order.getAllVisibleItems()}}
+            {{foreach order.getAllVisibleItems() as item}}
+              <tr>
+                <td>{{var item.name}}</td>
+                <td>{{var item.qty_ordered}}</td>
+                <td>{{var item.row_total|formatPrice}}</td>
+              </tr>
+            {{/foreach}}
+          {{/depend}}
+          <tr>
+            <td><strong>Subtotal</strong></td><td></td><td>{{var order.subtotal|formatPrice}}</td>
+          </tr>
+          {{depend order.getShippingAmount()}}
+          <tr>
+            <td><strong>Envío</strong></td><td></td><td>{{var order.shipping_amount|formatPrice}}</td>
+          </tr>
+          {{/depend}}
+          {{depend order.getTaxAmount()}}
+          <tr>
+            <td><strong>Impuesto</strong></td><td></td><td>{{var order.tax_amount|formatPrice}}</td>
+          </tr>
+          {{/depend}}
+          <tr>
+            <td><strong>Total</strong></td><td></td><td><strong>{{var order.grand_total|formatPrice}}</strong></td>
+          </tr>
+        </table>
+
+        <p>Puedes ver el estado de tu pedido o seguir comprando haciendo clic en el siguiente botón:</p>
+        <p><a href="{{var store.getUrl('sales/order/view', {'order_id':order.entity_id})}}" class="button">Ver mi pedido</a></p>
+
+        <h3>Datos de envío:</h3>
+        <p>
+          {{var order.shipping_address.firstname}} {{var order.shipping_address.lastname}}<br/>
+          {{var order.shipping_address.street}}<br/>
+          {{var order.shipping_address.city}}, {{var order.shipping_address.region}}<br/>
+          {{var order.shipping_address.postcode}}<br/>
+          {{var order.shipping_address.telephone}}
+        </p>
+
+        <p>Si tienes alguna duda, contáctanos respondiendo a este correo o al teléfono +56 9 95459331 o al email: ventas@multicomercio.cl</p>
+
+        <p>¡Gracias por preferirnos!</p>
+      </td>
+    </tr>
+    <tr>
+      <td class="footer">
+        
+        <p>&copy; {{var date}} {{var store.getFrontendName()}}. Todos los derechos reservados.</p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
