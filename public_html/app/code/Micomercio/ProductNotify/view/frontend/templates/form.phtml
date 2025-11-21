@@ -1,11 +1,13 @@
 <?php
-/** @var \Micomercio\ProductNotify\Block\Form $block */
+/**
+ * Template con protección anti-bot + Google Ads Conversion
+ * @var \Micomercio\ProductNotify\Block\Form $block
+ */
 $product = $block->getProduct();
 if (!$product || $product->isAvailable()) return;
 ?>
 
 <style>
-
 @media (max-width: 768px) {
     .product-notify-button {
         width: 100%;
@@ -19,8 +21,6 @@ if (!$product || $product->isAvailable()) return;
         justify-content: center;
     }
 }
-
-
 
 .product-notify-button {
     background-color: #f0ad4e;
@@ -67,6 +67,13 @@ if (!$product || $product->isAvailable()) return;
             <input type="hidden" name="form_key" value="<?= $block->getFormKey() ?>" />
             <input type="hidden" name="product_sku" value="<?= $product->getSku() ?>" />
 
+            <!-- Timestamp para validación de tiempo (anti-bot) -->
+            <input type="hidden" name="_timestamp" value="<?= time() ?>" />
+
+            <!-- Campo honeypot oculto para detectar bots -->
+            <div style="position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;" aria-hidden="true">
+              <input type="text" name="website_url" value="" autocomplete="new-password" tabindex="-1" aria-hidden="true" />
+            </div>
 
             <div class="field required">
                 <label><?= __('Nombre') ?></label>
@@ -80,9 +87,12 @@ if (!$product || $product->isAvailable()) return;
                 <label><?= __('Teléfono (opcional)') ?></label>
                 <input type="text" name="phone" />
             </div>
+
+            <!-- Campo honeypot adicional (tu versión original) -->
             <div style="display: none;">
-              <input type="text" name="company" value="" autocomplete="off" />
+                <input type="text" name="company" value="" autocomplete="off" />
             </div>
+
             <div class="actions">
                 <button type="submit" class="action primary">
                     <span><?= __('Enviar solicitud') ?></span>
@@ -91,13 +101,10 @@ if (!$product || $product->isAvailable()) return;
         </form>
         <div id="product-notify-success" style="display: none; text-align: center; padding: 20px;">
             <p><strong><?= __('¡Gracias! Te avisaremos cuando el producto esté disponible.') ?></strong></p>
-
-
         </div>
     </div>
-
-
 </div>
+
 <!-- Script de conversión de Google Ads -->
 <script>
 function gtag_report_conversion(url) {
