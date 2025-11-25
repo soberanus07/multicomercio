@@ -4,12 +4,9 @@
 -->
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
-      <head>
-        <link rel="preconnect" href="https://www.multicomercio.cl" crossorigin/>
+    <head>
+        <link rel="preconnect" href="https://www.multicomercio.cl" crossorigin="anonymous"/>
         <link rel="dns-prefetch" href="https://www.multicomercio.cl"/>
-        
-        <!-- Defer non-critical CSS para mejorar LCP -->
-        <css src="mage/calendar.css" media="print" rel_type="defer"/>
         
         <style type="text/css">
             /* CRITICAL CSS para prevenir CLS - Paso 1 */
@@ -29,17 +26,7 @@
                 .fotorama__img,img.fotorama__img{width:300px!important;height:300px!important}
             }
         </style>
-        
-        <!-- Script para activar CSS diferido -->
-        <script>
-            (function(){
-                var links = document.querySelectorAll('link[media="print"]');
-                for(var i=0; i<links.length; i++){
-                    links[i].onload = function(){this.media='all'};
-                }
-            })();
-        </script>
-      </head>
+    </head>
     <body>
         <!-- Referenciamos el contenedor product.info.main -->
         <referenceContainer name="product.info.main">
