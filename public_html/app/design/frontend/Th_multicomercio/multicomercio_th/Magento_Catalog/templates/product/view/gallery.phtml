@@ -246,60 +246,70 @@ $options['keyboard'] = false;   // Desactivar navegación por teclado (opcional)
 require(['jquery'], function ($) {
   var ACTIVE_FRAME_SEL = '.fotorama__stage__frame.fotorama__active, .fotorama__stage__frame[data-active="true"]';
   var IMG_SEL = 'img.fotorama__img, img.fotorama__img--full';
-  var firstImageProcessed = false;
+  var firstImageSrc = null; // Guardar el src de la primera imagen
 
   function stampActive() {
     var $activeFrame = $(ACTIVE_FRAME_SEL).first();
     var $activeImg = $activeFrame.find(IMG_SEL).first();
 
     if ($activeImg.length) {
-      var isFirstImage = !firstImageProcessed;
+      // Guardar el src de la primera imagen la primera vez
+      if (firstImageSrc === null) {
+        firstImageSrc = $activeImg.attr('src');
+      }
+
+      // Verificar si esta imagen es la primera imagen por su src
+      var isFirstImage = ($activeImg.attr('src') === firstImageSrc);
 
       // CRÍTICO: Forzar dimensiones SIEMPRE
       $activeImg.css({
-    'width': 'auto',
-    'height': 'auto',
-    'max-width': '100%',
-    'max-height': '100%',
-    'object-fit': 'contain'
-  });
-  $activeImg.attr('width', '500');
-  $activeImg.attr('height', '500');
+        'width': 'auto',
+        'height': 'auto',
+        'max-width': '100%',
+        'max-height': '100%',
+        'object-fit': 'contain'
+      });
+      $activeImg.attr('width', '500');
+      $activeImg.attr('height', '500');
 
-  if (isFirstImage) {
-    console.log('LCP Image detected and optimized'); // DEBUG
-    // Primera imagen: eager + high priority (LCP)
-    $activeImg.attr({
-      'loading': 'eager',
-      'fetchpriority': 'high'
-    }).removeAttr('decoding');
-    firstImageProcessed = true;
-  }else {
-// Imágenes subsecuentes: LAZY (no eager)
-$activeImg.attr({
-  'loading': 'lazy',
-  'fetchpriority': 'low',
-  'decoding': 'async'
-});
-}
+      if (isFirstImage) {
+        // Primera imagen: eager + high priority (LCP)
+        $activeImg.attr({
+          'loading': 'eager',
+          'fetchpriority': 'high'
+        }).removeAttr('decoding');
+      } else {
+        // Imágenes subsecuentes: LAZY
+        $activeImg.attr({
+          'loading': 'lazy',
+          'fetchpriority': 'low',
+          'decoding': 'async'
+        });
+      }
 
       // Resto de imágenes NO activas: lazy loading + dimensiones forzadas
       $activeFrame.siblings().find(IMG_SEL).each(function () {
         var $img = $(this);
+        var imgSrc = $img.attr('src');
 
         // Forzar dimensiones
         $img.css({
-    'width': 'auto',
-    'height': 'auto',
-    'max-width': '100%',
-    'max-height': '100%',
-    'object-fit': 'contain'
-  });
-  $img.attr('width', '500');
-  $img.attr('height', '500');
+          'width': 'auto',
+          'height': 'auto',
+          'max-width': '100%',
+          'max-height': '100%',
+          'object-fit': 'contain'
+        });
+        $img.attr('width', '500');
+        $img.attr('height', '500');
 
-        // Solo aplicar lazy si no tiene eager ya
-        if ($img.attr('loading') !== 'eager') {
+        // Si es la primera imagen, mantener eager; si no, lazy
+        if (imgSrc === firstImageSrc) {
+          $img.attr({
+            'loading': 'eager',
+            'fetchpriority': 'high'
+          }).removeAttr('decoding');
+        } else {
           $img.attr({
             'loading': 'lazy',
             'decoding': 'async',
